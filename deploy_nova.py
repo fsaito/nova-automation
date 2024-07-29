@@ -1,7 +1,15 @@
 import click
 import os
 import subprocess
+import shutil
 import yaml
+
+def check_azure_cli():
+    if shutil.which("az") is None:
+        click.echo("Azure CLI not found. Installing...")
+        subprocess.run(['curl', '-sL', 'https://aka.ms/InstallAzureCLIDeb', '|', 'sudo', 'bash'], check=True)
+    else:
+        click.echo("Azure CLI is already installed.")
 
 @click.command()
 @click.option('--eth-rpc-url', prompt='ETH RPC URL', help='The ETH RPC endpoint.')
@@ -16,7 +24,10 @@ import yaml
 @click.option('--bank-a-sequencer-address', prompt='Bank A Sequencer Address', help='The address for Bank A sequencer.')
 @click.option('--bank-b-sequencer-address', prompt='Bank B Sequencer Address', help='The address for Bank B sequencer.')
 @click.option('--deployment-type', type=click.Choice(['local', 'kubernetes', 'aks']), prompt='Deployment Type', help='The type of deployment (local, kubernetes, aks).')
-def setup_nova(eth_rpc_url, deployer_address, deployer_private_key, selic_sequencer_address, bcb_sequencer_address, selic_cnpj8, bcb_cnpj8, bank_a_cnpj8, bank_b_cnpj8, bank_a_sequencer_address, bank_b_sequencer_address, deployment_type):
+@click.option('--azure-subscription-id', prompt='Azure Subscription ID', help='The Azure Subscription ID.')
+@click.option('--azure-resource-group', prompt='Azure Resource Group', help='The Azure Resource Group containing the AKS cluster.')
+@click.option('--aks-cluster-name', prompt='AKS Cluster Name', help='The name of the AKS cluster.')
+def setup_nova(eth_rpc_url, deployer_address, deployer_private_key, selic_sequencer_address, bcb_sequencer_address, selic_cnpj8, bcb_cnpj8, bank_a_cnpj8, bank_b_cnpj8, bank_a_sequencer_address, bank_b_sequencer_address, deployment_type, azure_subscription_id, azure_resource_group, aks_cluster_name):
     """Simple program to set up and deploy Nova rollup node."""
 
     env_content = f"""
@@ -45,7 +56,7 @@ export USE_MOCK_VERIFIER=false
     elif deployment_type == 'kubernetes':
         deploy_kubernetes()
     elif deployment_type == 'aks':
-        deploy_aks()
+        deploy_aks(azure_subscription_id, azure_resource_group, aks_cluster_name)
 
 def deploy_local():
     click.echo('Starting local deployment...')
@@ -81,10 +92,18 @@ def deploy_kubernetes():
     click.echo('Starting Kubernetes deployment...')
     subprocess.run(['ansible-playbook', '-i', 'ansible/kubernetes_hosts', 'ansible/deploy_nova_k8s.yml'])
 
-def deploy_aks():
+def deploy_aks(azure_subscription_id, azure_resource_group, aks_cluster_name):
     click.echo('Starting AKS deployment...')
+    # Ensure Azure CLI is installed
+    check_azure_cli()
+    # Login to Azure
+    subprocess.run(['az', 'login'], check=True)
+    # Set the Azure subscription
+    subprocess.run(['az', 'account', 'set', '--subscription', azure_subscription_id], check=True)
+    # Get AKS credentials
+    subprocess.run(['az', 'aks', 'get-credentials', '--resource-group', azure_resource_group, '--name', aks_cluster_name], check=True)
+    # Run the Ansible playbook for AKS
     subprocess.run(['ansible-playbook', '-i', 'ansible/aks_hosts', 'ansible/deploy_nova_aks.yml'])
 
 if __name__ == '__main__':
     setup_nova()
-

@@ -24,6 +24,15 @@ foundryup
 # Install Python libraries
 pip3 install click pyyaml
 
+# Install Azure CLI if not installed
+if ! command -v az &> /dev/null
+then
+    echo "Azure CLI could not be found. Installing..."
+    curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+else
+    echo "Azure CLI is already installed."
+fi
+
 # Confirm installations
 echo "Installed versions:"
 python3 --version
@@ -31,7 +40,7 @@ pip3 --version
 ansible --version
 docker --version
 helm version
+az --version
 foundry --version
 
 echo "Environment setup complete."
-
