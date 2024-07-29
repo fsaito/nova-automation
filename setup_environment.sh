@@ -19,6 +19,17 @@ curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bas
 
 # Install Foundry
 curl -L https://foundry.paradigm.xyz | bash
+
+# Source the shell configuration to update the PATH
+if [[ -f ~/.bashrc ]]; then
+    source ~/.bashrc
+elif [[ -f ~/.zshrc ]]; then
+    source ~/.zshrc
+elif [[ -f ~/.profile ]]; then
+    source ~/.profile
+fi
+
+# Run foundryup to install Foundry
 foundryup
 
 # Install Python libraries
