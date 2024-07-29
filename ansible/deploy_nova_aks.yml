@@ -1,0 +1,26 @@
+---
+- hosts: aks_nodes
+  become: yes
+  tasks:
+    - name: Unzip artifacts
+      unarchive:
+        src: /opt/nova/ZKP-Microsoft-Nova_pilot.zip
+        dest: /opt/nova/
+        creates: /opt/nova/nova-rollup_20240609.tar
+
+    - name: Load Docker images
+      command: docker load -i /opt/nova/nova-rollup_20240609.tar
+
+    - name: Load smart contract tarball
+      unarchive:
+        src: /opt/nova/nova-smartcontract_20240615.tar.gz
+        dest: /opt/nova/contracts/
+
+    - name: Install Helm
+      shell: |
+        curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+
+    - name: Install Foundry
+      shell: |
+        curl -L https://foundry.paradigm.xyz
+

@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nova-config
+  namespace: nova
+data:
+  nova.yaml: |
+    vm:
+      batch_size: 20
+      verdict_depth: 20
+      role: "CentralBank"
+      rollup_address: "{{ rollup_address }}"
+      token_address: "{{ token_address }}"
+    eth_client:
+      l1_url: "{{ l1_url }}"
+      l1_chain_id: "{{ l1_chain_id }}"
+      no_save: false
+      l1_submitter_secret_key: "{{ l1_submitter_secret_key }}"
+      l1_from_block: "{{ l1_from_block }}"
+      address_discovery_address: "{{ address_discovery_address }}"
+    rollup:
+      cnpj8: "{{ cnpj8 }}"
+      account_address: "{{ account_address }}"
+
